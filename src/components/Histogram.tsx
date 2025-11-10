@@ -1,14 +1,29 @@
 import { useDiceStore } from '../store';
 
 const Histogram = () => {
-  // Subscribe to rolls array so component re-renders when it changes
+  // Subscribe to all needed state
   const rolls = useDiceStore((state) => state.rolls);
   const robberMarks = useDiceStore((state) => state.robberMarks);
-  const getRollCounts = useDiceStore((state) => state.getRollCounts);
   const robberEmoji = useDiceStore((state) => state.robberEmoji);
 
-  // Get roll counts separated by robber status
-  const rollCounts = getRollCounts();
+  // Compute roll counts directly from rolls
+  const rollCounts: Record<number, { normal: number; robber: number }> = {};
+
+  // Initialize counts for 2-12
+  for (let i = 2; i <= 12; i++) {
+    rollCounts[i] = { normal: 0, robber: 0 };
+  }
+
+  // Count each roll, separating normal vs robber rolls
+  rolls.forEach((roll) => {
+    if (roll.value >= 2 && roll.value <= 12) {
+      if (roll.wasRobberActive) {
+        rollCounts[roll.value].robber++;
+      } else {
+        rollCounts[roll.value].normal++;
+      }
+    }
+  });
 
   // Find the maximum total count to scale the bars
   const maxCount = Math.max(
